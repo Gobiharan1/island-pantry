@@ -1,0 +1,8 @@
+{
+  "name": "island-pantry-pages",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "sql.js": "1.13.0"
+  }
+}
