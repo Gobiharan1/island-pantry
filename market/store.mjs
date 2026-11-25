@@ -59,23 +59,23 @@ const current = (page,category = '') => route() === page && (filters().category 
 function header() {
   const {settings,categories} = state;
   document.querySelector('#header').innerHTML = `
-    <div class="topbar"><div class="wrap"><span>${icon('truck')}${e(settings.banner || 'Sri Lankan groceries for your kitchen')}</span><span class="region">${icon('pin')} Sri Lanka · LKR</span></div></div>
+    <div class="topbar"><div class="wrap"><span>${icon('truck')}${e(settings.banner || 'Sri Lankan groceries for your kitchen')}</span><a class="region" href="${url('faq')}">${icon('pin')} Delivery &amp; collection</a></div></div>
     <header class="header"><div class="wrap head">${brand()}
     <form class="search" data-form="search" role="search"><input aria-label="Search groceries" name="q" placeholder="Search rice, spices, Ceylon tea…" value="${e(filters().q ?? '')}"><button type="submit" aria-label="Search">${icon('search')}</button></form>
     <div class="tools"><a class="icon-link account-link" aria-label="My account" href="${url('account')}">${icon('user')}<span class="account-label">Account</span></a>
     <a href="${url('favorites')}" class="icon-link" aria-label="Favourites" title="Favourites">${icon('heart')}</a>
     <button class="basket" data-action="cart" aria-label="Basket, ${amount()} items">${icon('bag')}<span class="cart-label">Basket</span><span class="count">${amount()}</span></button></div></div>
-    <nav class="wrap nav" aria-label="Shop departments"><a class="shop-all" href="${shop()}"${current('shop')}>${icon('grid')} Shop all</a>
+    <nav class="wrap nav" aria-label="Shop departments"><a class="shop-all" href="${shop()}"${current('shop')}>${icon('grid')} Shop all departments</a>
     ${categories.filter(c => !c.parent).map(c => `<a href="${shop({category:c.id})}"${current('shop',c.id)}>${e(c.label)}</a>`).join('')}
     <a class="offer-link" href="${url('offers')}"${current('offers')}>${icon('tag')} Special Offers</a></nav></header>`;
 }
 function footer() {
   const whatsapp = state.settings.whatsapp;
   document.querySelector('#footer').innerHTML = `<footer class="footer"><div class="wrap">
-    <div class="footer-grid"><div>${brand()}<p>From the spice cupboard to the tea tin. Sri Lankan groceries for everyday cooking.</p></div>
+    <div class="footer-grid"><div>${brand()}<p>Rice, spices, snacks and everyday groceries.</p></div>
       <nav aria-label="Shop"><strong>Shop</strong><a href="${shop()}">All groceries</a><a href="${url('offers')}">Special offers</a><a href="${url('favorites')}">Favourites</a><a href="${url('account')}">My account</a></nav>
       <nav aria-label="Customer help"><strong>Help</strong><a href="${url('about')}">About us</a><a href="${url('contact')}">Contact us</a><a href="${url('faq')}">FAQs</a><a href="${url('policies')}">Privacy &amp; policies</a>${whatsapp ? `<a href="https://wa.me/${e(whatsapp)}" target="_blank" rel="noopener noreferrer">WhatsApp</a>` : ''}</nav>
-      <div class="newsletter"><h2>Pantry news</h2><p>Sign up for new products and grocery offers.</p>
+      <div class="newsletter"><h2>Grocery offers by email</h2><p>Get updates on new products and special offers.</p>
       <form data-form="newsletter"><input name="email" aria-label="Email address" type="email" placeholder="Email address" required><button class="btn yellow">Subscribe</button></form><p data-feedback role="status"></p></div></div>
     <div class="footer-base"><span>© ${new Date().getFullYear()} Island Pantry</span><span>${browserDemo ? 'Interactive demo · Activity stays in this tab' : state.settings.preview ? 'Private store preview · Sample prices and availability' : 'Sri Lanka · LKR'}</span>${state.user?.admin ? `<a href="${url('admin')}">Store administration</a>` : ''}</div></div></footer>`;
 }
@@ -98,21 +98,43 @@ const productGrid = products => `<div class="products">${products.map(productCar
 
 function home() {
   const {settings,categories,products} = state;
-  const title = settings.heroHeading === sampleSettings.heroHeading ? 'A little taste of <em>home.</em>' : e(settings.heroHeading);
+  const originalDefault = 'A little taste of home.';
+  const title = settings.heroHeading === originalDefault ? sampleSettings.heroHeading : settings.heroHeading;
+  const copy = settings.heroCopy === 'From fragrant spices to favourite tea-time treats, shop the Sri Lankan groceries you grew up with.'
+    ? sampleSettings.heroCopy : settings.heroCopy;
   const bundle = productById('curry-night');
-  return `<section class="wrap hero"><div class="hero-copy">
-      <span class="eyebrow">${icon('leaf')} The Sri Lankan pantry</span>
-      <h1>${title}</h1><p>${e(settings.heroCopy)}</p>
-      <div class="actions">${link(shop(),'Shop groceries')}${link(url('offers'),'View offers','btn secondary')}</div>
-    </div><img src="${image('island-table')}" width="1380" height="920" fetchpriority="high" alt="Sri Lankan rice and curry with dhal, coconut sambol, greens and papadum on a banana leaf"></section>
-    <div class="wrap benefits">
-      <div class="benefit">${icon('leaf')} <span><strong>Sri Lankan favourites</strong><small>Pantry staples and tea-time treats</small></span></div>
-      <div class="benefit">${icon('truck')} <span><strong>Local delivery</strong><small>Check your postcode at checkout</small></span></div>
-      <div class="benefit">${icon('box')} <span><strong>${settings.collection ? 'Collection available' : 'Scheduled delivery'}</strong><small>Choose a date and time slot</small></span></div></div>
-    <section class="wrap section" aria-labelledby="category-title"><div class="section-head"><h2 id="category-title">Shop by category</h2>${link(shop(),'All groceries','textlink')}</div>
-      <div class="categories">${categories.filter(c => !c.parent).map(c => `<a class="category" href="${shop({category:c.id})}" style="--tint:${e(c.tint)}"><img src="${image(c.image)}" width="356" height="356" alt=""><strong>${e(c.label)}</strong></a>`).join('')}</div></section>
-    <section class="wrap section" aria-labelledby="popular-title"><div class="section-head"><div><h2 id="popular-title">Pantry favourites</h2><p>The ingredients and treats we reach for most.</p></div>${link(shop({sort:'popular'}),'View all','textlink')}</div>${productGrid(products.filter(p=>p.featured).slice(0,5))}</section>
-    ${bundle ? `<section class="wrap section"><div class="promo"><div><h2>Curry night, sorted.</h2><p>Four pantry essentials for a Sri Lankan curry, in one bundle.</p>${link(url('product',{id:bundle.id}),'Shop the curry bundle','btn yellow')}</div><img src="${image(bundle.image)}" width="356" height="356" loading="lazy" alt="Curry spices and coconut milk"></div></section>` : ''}`;
+  const curry = productById('roasted-curry');
+  return `<section class="wrap hero" aria-labelledby="home-title">
+    <div class="hero-feature">
+      <img src="${image('island-table')}" width="1380" height="920" fetchpriority="high" alt="Sri Lankan rice and curry served on a banana leaf">
+      <div class="hero-copy"><h1 id="home-title">${e(title)}</h1><p>${e(copy)}</p>
+        ${link(shop(),'Shop groceries','btn yellow')}
+      </div>
+    </div>
+    <div class="hero-offers">
+      <a class="offer-tile offer-savings" href="${url('offers')}">
+        <div><h2>Special offers</h2><span>Shop deals</span></div>
+        <img src="${image(curry?.image ?? 'curry')}" width="356" height="356" alt="">
+      </a>
+      ${bundle ? `<a class="offer-tile offer-bundle" href="${url('product',{id:bundle.id})}">
+        <div><h2>Curry Night Bundle</h2><span>${rs(bundle.price)}</span></div>
+        <img src="${image(bundle.image)}" width="356" height="356" alt="">
+      </a>` : ''}
+    </div>
+  </section>
+  <section class="wrap section" aria-labelledby="category-title">
+    <div class="section-head"><h2 id="category-title">Shop by department</h2>${link(shop(),'Shop all','textlink')}</div>
+    <div class="categories">${categories.filter(c=>!c.parent).map(c=>`<a class="category" href="${shop({category:c.id})}" style="--tint:${e(c.tint)}"><span class="category-image"><img src="${image(c.image)}" width="356" height="356" alt=""></span><strong>${e(c.label)}</strong></a>`).join('')}</div>
+  </section>
+  <section class="popular-section" aria-labelledby="popular-title"><div class="wrap section">
+    <div class="section-head"><h2 id="popular-title">Pantry favourites</h2>${link(shop({sort:'popular'}),'View best sellers','textlink')}</div>
+    ${productGrid(products.filter(p=>p.featured).slice(0,5))}
+  </div></section>
+  <div class="wrap benefits">
+    <div class="benefit">${icon('truck')} <span><strong>Local delivery</strong><small>Check your postcode at checkout</small></span></div>
+    <div class="benefit">${icon('box')} <span><strong>${settings.collection ? 'Collection available' : 'Scheduled delivery'}</strong><small>Pick a date and time at checkout</small></span></div>
+    <a class="benefit" href="${url('contact')}">${icon('user')} <span><strong>Need help?</strong><small>Contact Island Pantry</small></span></a>
+  </div>`;
 }
 function descends(product, id) {
   if (!id) return true;
@@ -136,15 +158,15 @@ function listing(page) {
   if (sort === 'price-high') filtered.sort((a,b) => b.price - a.price);
   if (sort === 'popular') filtered.sort((a,b) => b.best - a.best);
   const title = page === 'offers' ? 'Special offers' : page === 'favorites' ? 'Your favourites' : currentCategory(category)?.label ?? 'Shop groceries';
-  const label = page === 'offers' ? 'Savings on pantry favourites and cooking bundles.' : page === 'favorites' ? 'Keep the groceries you buy most within easy reach.' : 'Browse Sri Lankan pantry staples and everyday essentials.';
-  const nav = page === 'shop' ? `<nav class="chips" aria-label="Filter by category">
+  const nav = page === 'shop' ? `<nav class="collection-nav" aria-label="Filter by department">
+    <h2>Departments</h2><div>
     <a href="${shop({q,sort,stock})}"${!category ? ' aria-current="page"' : ''}>All groceries</a>
-    ${state.categories.map(c => `<a href="${shop({category:c.id,q,sort,stock})}"${c.id === category ? ' aria-current="page"' : ''}>${e(c.label)}</a>`).join('')}</nav>` : '';
-  const contents = `${nav}<div class="results"><p>${filtered.length} ${filtered.length === 1 ? 'product' : 'products'}${q ? ' for “'+e(q)+'”' : ''}</p>
+    ${state.categories.map(c => `<a href="${shop({category:c.id,q,sort,stock})}"${c.id === category ? ' aria-current="page"' : ''}>${e(c.label)}</a>`).join('')}</div></nav>` : '';
+  const contents = `<div class="results"><p>${filtered.length} ${filtered.length === 1 ? 'product' : 'products'}${q ? ' for “'+e(q)+'”' : ''}</p>
     <div class="actions"><label><input type="checkbox" id="stock-only"${stock ? ' checked' : ''}> In stock</label>
     <select id="sort" aria-label="Sort products">${[['','Featured'],['popular','Best sellers'],['price-low','Price low to high'],['price-high','Price high to low']].map(([value,name])=>option(value,name,sort)).join('')}</select></div></div>
     ${filtered.length ? productGrid(filtered) : empty(page === 'favorites' ? 'No saved products yet' : 'No products found',page === 'favorites' ? 'Tap the heart on any product to save it here.' : 'Try another search or browse all groceries.')}`;
-  return section(title,contents,label);
+  return section(title,`<div class="collection${nav ? ' with-nav' : ''}">${nav}<div class="collection-main">${contents}</div></div>`);
 }
 function detail() {
   const p = productById(filters().id);
@@ -154,7 +176,7 @@ function detail() {
   const reviews = state.reviews.filter(x => x.product === p.id);
   return `<section class="wrap section">${trail(p.name, `<a href="${shop({category:p.category})}">${e(currentCategory(p.category)?.label ?? 'Groceries')}</a><span>/</span>`)}
     <div class="detail-grid"><img class="detail-image" src="${image(p.image)}" width="356" height="356" alt="${e(p.name)}">
-    <div class="product-summary"><h1>${e(p.name)}</h1><div id="detail-price">${cost(v)}</div><p>${e(p.description)}</p>
+    <div class="product-summary"><p class="product-department">${e(currentCategory(p.category)?.label ?? 'Groceries')}</p><h1>${e(p.name)}</h1><div id="detail-price">${cost(v)}</div><p>${e(p.description)}</p>
     <p id="stock-status" class="stock">${v.stock ? 'In stock' : 'Out of stock'}</p>
     <form data-form="product" data-id="${e(p.id)}"><label class="field">Size<select name="variant" id="variant">${p.variants.map(opt=>option(opt.id,opt.label + (opt.stock ? '' : ' · Out of stock'),v.id)).join('')}</select></label>
       ${field('qty','Quantity',`type="number" min="1" max="${v.stock || 1}" required`,1)}
